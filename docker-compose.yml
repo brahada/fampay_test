@@ -1,0 +1,150 @@
+version: "3.3"
+
+networks:
+  back-tier:
+
+services:
+  db:
+    image: postgres:12
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: wDnfWovh4uf3
+    networks:
+      - back-tier
+    volumes:
+      - ./postgresql:/var/lib/postgresql
+      - ./postgresql_data:/var/lib/postgresql/data
+      - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+
+  rabbitmq:
+    image: rabbitmq:3.8.17-management
+    container_name: 'rabbitmq'
+    hostname: rabbimq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./rabbitmq/data/:/var/lib/rabbitmq/
+      - ./rabbitmq/log/:/var/log/rabbitmq
+    networks:
+      - back-tier
+
+  adminer:
+    image: adminer
+    restart: always
+    depends_on:
+      - db
+    networks:
+      - back-tier
+    ports:
+      - 8080:8080
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx/:/etc/nginx/conf.d/
+    depends_on:
+      - webserver_1
+      - webserver_2
+    networks:
+      - back-tier
+    ports:
+      - 80:80
+
+  webserver_1:
+    build: .
+    image: webserver:v1
+    hostname: webserver_1
+    container_name: webserver_1
+    depends_on:
+      - rabbitmq
+      - db
+    command: 'bash /app/docker-entrypoint.sh'
+    volumes:
+      - .:/app
+    networks:
+      - back-tier
+#    ports:
+#    - 8000:8000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+
+  webserver_2:
+    image: webserver:v1
+    hostname: webserver_2
+    container_name: webserver_2
+    depends_on:
+      - rabbitmq
+      - db
+    command: 'bash /app/docker-entrypoint.sh'
+    volumes:
+      - .:/app
+    networks:
+      - back-tier
+#    ports:
+#      - 9000:8000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+
+  worker:
+    image: webserver:v1
+    container_name: celery
+    depends_on:
+      - rabbitmq
+      - db
+    environment:
+      - CELERY_BROKER_URL=amqp://rabbitmq
+    command: celery -A fampay_test worker -l info
+    volumes:
+      - .:/app
+    networks:
+      - back-tier
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+
+  beat:
+    image: webserver:v1
+    container_name: beat
+    depends_on:
+      - rabbitmq
+      - worker
+      - db
+    environment:
+      - CELERY_BROKER_URL=amqp://rabbitmq
+    command: celery -A fampay_test beat -l info
+    volumes:
+      - .:/app
+    networks:
+      - back-tier
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 150M
+        reservations:
+          cpus: '0.25'
+          memory: 50M
+
+volumes:
+  postgresql:
+  postgresql_data:
