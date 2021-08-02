@@ -1,4 +1,4 @@
-# youtube_search
+# Fampay - Youtube API
 ## Project Goal
 To make an API to fetch latest videos sorted in reverse chronological order of their publishing date-time from YouTube for a given tag/search query in a paginated response.
 
@@ -16,14 +16,14 @@ To make an API to fetch latest videos sorted in reverse chronological order of t
  
    Example:
     ```
-    CELERY_BROKER_URL='amqp://rabbitmq'
-    CELERY_TASK_DEFAULT_QUEUE='fampay'
     GOOGLE_API_KEYS=APIKEY_1,APIKEY_2,APIKEY_3,....,APIKEY_N
     QUERY_STRING=cricket
     DB_NAME='fampay'
     DB_USER='postgres'
-    DB_PASSWORD='wDnfWovh4uf3'
+    DB_PASSWORD='password'
     DB_HOST='db'
+    CELERY_BROKER_URL='amqp://rabbitmq'
+    CELERY_TASK_DEFAULT_QUEUE='fampay'
     ```
     
       You can copy and paste the above contents to `.env` file and replace APIKEY_1,APIKEY_2,...,APIKEY_N with your Google api keys. 
