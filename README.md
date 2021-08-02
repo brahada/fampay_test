@@ -1,6 +1,6 @@
 # Fampay - Youtube API
 ## Vision
-To make an API to fetch latest videos sorted in reverse chronological order of their publishing date-time from YouTube for a given tag/search query in a paginated response.
+To make an API to fetch latest videos from YouTube for a given tag/search query in a paginated response sorted in reverse chronological order of their publishing date-time.
 
 ## Requirements list
 - A GET API which returns the stored video data in a paginated response sorted in descending order of published datetime.
